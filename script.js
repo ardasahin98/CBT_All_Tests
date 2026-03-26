@@ -279,10 +279,14 @@ function renderPage(index) {
                 <div class="image-area">
                     <div style="margin-bottom:10px;">
                         <select id="strain_select_${question.questionNumber}" class="strain-selector">
-                            <option value="3_Strain_Cycle">3% Strain</option>
-                            <option value="4_Strain_Cycle">4% Strain</option>
-                            <option value="5_Strain_Cycle">5% Strain</option>
-                            <option value="6_Strain_Cycle">6% Strain</option>
+                            <option value="3_SA">3% SA Strain</option>
+                            <option value="4_SA">4% SA Strain</option>
+                            <option value="5_SA">5% SA Strain</option>
+                            <option value="6_SA">6% SA Strain</option>
+                            <option value="3_DA">6% DA Strain</option>
+                            <option value="4_DA">8% DA Strain</option>
+                            <option value="5_DA">10% DA Strain</option>
+                            <option value="6_DA">12% DA Strain</option>
                             <option value="Last_Cycle">Last Cycle</option>
                         </select>
                     </div>
@@ -409,7 +413,7 @@ function renderPage(index) {
             const strainFolder = document.getElementById(`strain_select_${qNum}`).value;
             const researcher = document.getElementById("researcher-name").value;
 
-            const imgPath = `/Figures_Internal/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
+            const imgPath = `/Figures/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
 
             const imgEl = document.getElementById(`strain_image_${qNum}`);
             const msgEl = document.getElementById(`missing_image_${qNum}`);
