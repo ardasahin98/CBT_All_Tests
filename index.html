@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Form</title>
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="icon" type="image/png" href="Figures_Internal/favicon.png">
+
+    <!-- Firebase SDKs -->
+    <!-- Firebase v8 Compatible SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.5/jstat.min.js"></script>
+</head>
+
+<body>
+
+    <!-- LOGIN PAGE (NEW) -->
+    <div id="login-page" class="page active">
+        <div class="question-header">
+            <h1>Researcher Login</h1>
+            <p>Please sign in with your Google account to begin or update your responses.</p>
+        </div>
+            <div class="navigation-buttons">
+                <button onclick="googleLogin()">Sign in with Google</button>
+            </div>
+    </div>
+
+    <!-- QUIZ PAGES (UNCHANGED) -->
+    <div id="quiz-container" style="display:none">
+        <div class="page" id="page-1">
+            <div class="question-header">
+                <h1>Behavior Type Selection Quiz</h1>
+                <p>This form is designed to guide you in correcting the behavior type. There are 200 tests in total.</p>
+            </div>
+
+            <div class="question-header">
+                <label><b>Please select a researcher</b></label>
+                <select id="researcher-name">
+                    <option value="">Select Researcher</option>
+                    <option value="AJ">Amalesh Jana - AJ</option>
+                    <option value="AS">Arda Sahin - AS</option>
+                    <option value="AWS">Armin Stuedlein - AWS</option>
+                    <option value="JPS">Jonathan Stewart - JPS</option>
+                    <option value="KJU">Kristin Ulmer - KJU</option>
+                    <option value="SJB">Scott Brandenberg - SJB</option>
+                    <option value="SLK">Steve Kramer - SLK</option>
+                    <option value="VR">Varun Renugah - VR</option>
+                </select>
+            </div>
+
+            <div class="navigation-buttons">
+                <button onclick="navigatePage(0)">Next</button>
+            </div>
+        </div>
+
+        <!-- Dynamic questions injected here -->
+
+        <div class="page" id="last_page">
+            <div class="question-header">
+                <h1>Quiz Completed!</h1>
+                <p>You can submit or review your answers.</p>
+            </div>
+            <div class="navigation-buttons">
+                <button onclick="navigatePage(cachedQuestions.length - 1)">Back</button>
+                <button onclick="submitForm()">Submit</button>
+                <button onclick="downloadExcel()" class="submit-button" style="margin-top:20px;">
+                    Create Excel File
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

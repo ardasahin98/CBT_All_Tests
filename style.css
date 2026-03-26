@@ -1,0 +1,172 @@
+/* ---- GLOBAL ---- */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f6fb;
+    color: #333;
+}
+
+/* ---- Page visibility ---- */
+.page {
+    display: none;
+    padding: 20px;
+}
+.page.active {
+    display: block;
+}
+
+/* ---- Main Question Card ---- */
+.question-wrapper {
+    width: 90%;
+    max-width: 1400px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 35px 40px;
+    margin: 40px auto;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+/* ---- Header ---- */
+.question-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+.question-header h2 {
+    font-size: 26px;
+    font-weight: bold;
+}
+
+/* ---- GENERAL TEXTAREAS ---- */
+textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: none;
+}
+
+/* ---- NAVIGATION BUTTONS ---- */
+.navigation-buttons {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.navigation-buttons button {
+    background-color: #337bff;
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    margin: 8px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: 0.2s;
+}
+
+.navigation-buttons button:hover {
+    background-color: #1c5de0;
+}
+
+.navigation-buttons button:disabled {
+    background-color: #c6d4f5;
+    cursor: not-allowed;
+}
+
+/* ---------------- IMAGE AREA ---------------- */
+.image-area {
+    width: 100%;
+    text-align: center;
+    background: #ffffff;
+    padding: 20px 20px 30px 20px;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    margin-bottom: 30px;
+}
+
+/* Dropdown above image */
+.strain-selector {
+    background: white;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+/* Resizable wrapper */
+.image-wrapper {
+    display: inline-block;
+    width: 70%;
+    max-width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    border-radius: 16px;
+    resize: both;
+    overflow: hidden;
+    box-sizing: border-box;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.05);
+}
+
+.image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* ----------------- BOTTOM ROW ----------------- */
+.bottom-row {
+    display: flex;
+    gap: 30px;
+    margin-top: 10px;
+}
+
+/* ---- Behavior Box ---- */
+.behavior-box {
+    width: 30%;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+/* ---- Plot Box ---- */
+.plot-box {
+    width: 40%;
+    min-height: 320px;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+/* ---- Comments Box ---- */
+.comments-box {
+    width: 30%;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.comments-box textarea {
+    width: 80%;
+    height: 160px;
+    padding: 10px;
+    font-size: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+/* ---- Old styles (kept for compatibility with older pages) ---- */
+.image-table img {
+    max-width: 100%;
+    width: 500px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
