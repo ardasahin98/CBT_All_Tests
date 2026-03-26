@@ -399,7 +399,7 @@ function renderPage(index) {
         const strainSelect = document.getElementById(`strain_select_${question.questionNumber}`);
 
         // Default selection = 5% strain
-        strainSelect.value = "5_Strain_Cycle";
+        strainSelect.value = "5_SA";
 
         updateStrainImage(question.questionNumber, question.testNumber);
 
