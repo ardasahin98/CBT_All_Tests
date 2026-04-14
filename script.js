@@ -19,6 +19,7 @@ const db = firebase.firestore();
 let currentUser = null;
 let cachedQuestions = [];
 let responses = {};
+const IMAGE_BASE = "https://Figures.s3.us-west-004.backblazeb2.com";
 
 function normalizeEmail(email) {
     return (email || "").toLowerCase().trim();
@@ -398,6 +399,7 @@ function renderPage(index) {
         const maxStdSpan = document.getElementById(`max_stddev_${question.questionNumber}`);
 
         const strainSelect = document.getElementById(`strain_select_${question.questionNumber}`);
+        const piSelect = document.getElementById("pi_selection");
 
         // Default selection = 9% DA strain
         strainSelect.value = "9_DA";
@@ -408,6 +410,9 @@ function renderPage(index) {
         strainSelect.addEventListener("change", () => {
             updateStrainImage(question.questionNumber, question.testNumber);
         });
+        piSelect.addEventListener("change", () => {
+            updateStrainImage(question.questionNumber, question.testNumber);
+        });
 
         // ----- IMAGE UPDATE FUNCTION -----
         function updateStrainImage(qNum, testNum) {
@@ -415,8 +420,7 @@ function renderPage(index) {
             const researcher = document.getElementById("researcher-name").value;
             const piSelection = document.getElementById("pi_selection").value;
 
-            const piFolder = piSelection === "Yes" ? "Figures_PI" : "Figures_No_PI";
-            const imgPath = `/Figures/${piFolder}/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
+            const imgPath = `/Figures/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
 
             const imgEl = document.getElementById(`strain_image_${qNum}`);
             const msgEl = document.getElementById(`missing_image_${qNum}`);
