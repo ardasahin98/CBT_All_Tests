@@ -283,10 +283,11 @@ function renderPage(index) {
                             <option value="4_SA">4% SA Strain</option>
                             <option value="5_SA">5% SA Strain</option>
                             <option value="6_SA">6% SA Strain</option>
-                            <option value="3_DA">6% DA Strain</option>
-                            <option value="4_DA">8% DA Strain</option>
-                            <option value="5_DA">10% DA Strain</option>
-                            <option value="6_DA">12% DA Strain</option>
+                            <option value="6_DA">6% DA Strain</option>
+                            <option value="8_DA">8% DA Strain</option>
+                            <option value="9_DA">9% DA Strain</option>
+                            <option value="10_DA">10% DA Strain</option>
+                            <option value="12_DA">12% DA Strain</option>
                             <option value="Last_Cycle">Last Cycle</option>
                         </select>
                     </div>
@@ -398,8 +399,8 @@ function renderPage(index) {
 
         const strainSelect = document.getElementById(`strain_select_${question.questionNumber}`);
 
-        // Default selection = 5% strain
-        strainSelect.value = "5_SA";
+        // Default selection = 9% DA strain
+        strainSelect.value = "9_DA";
 
         updateStrainImage(question.questionNumber, question.testNumber);
 
@@ -412,13 +413,14 @@ function renderPage(index) {
         function updateStrainImage(qNum, testNum) {
             const strainFolder = document.getElementById(`strain_select_${qNum}`).value;
             const researcher = document.getElementById("researcher-name").value;
+            const piSelection = document.getElementById("pi_selection").value;
 
-            const imgPath = `/Figures/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
+            const piFolder = piSelection === "Yes" ? "Figures_PI" : "Figures_No_PI";
+            const imgPath = `/Figures/${piFolder}/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
 
             const imgEl = document.getElementById(`strain_image_${qNum}`);
             const msgEl = document.getElementById(`missing_image_${qNum}`);
 
-            // Try loading the image
             imgEl.onload = function () {
                 imgEl.style.display = "block";
                 msgEl.style.display = "none";
