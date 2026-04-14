@@ -418,9 +418,11 @@ function renderPage(index) {
         function updateStrainImage(qNum, testNum) {
             const strainFolder = document.getElementById(`strain_select_${qNum}`).value;
             const researcher = document.getElementById("researcher-name").value;
-            const piSelection = document.getElementById("pi_selection").value;
 
-            const imgPath = `/Figures/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
+            const piSelection = document.getElementById("pi_selection").value;
+            const baseFolder = piSelection === "Yes" ? "Figures_PI" : "Figures_No_PI";
+
+            const imgPath = `/Figures/${baseFolder}/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
 
             const imgEl = document.getElementById(`strain_image_${qNum}`);
             const msgEl = document.getElementById(`missing_image_${qNum}`);
