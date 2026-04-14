@@ -422,7 +422,7 @@ function renderPage(index) {
             const piSelection = document.getElementById("pi_selection").value;
             const baseFolder = piSelection === "Yes" ? "Figures_PI" : "Figures_No_PI";
 
-            const imgPath = `/Figures/${baseFolder}/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
+            const imgPath = `${IMAGE_BASE}/${baseFolder}/${researcher}/${strainFolder}/Test_Number_${testNum}.png`;
 
             const imgEl = document.getElementById(`strain_image_${qNum}`);
             const msgEl = document.getElementById(`missing_image_${qNum}`);
