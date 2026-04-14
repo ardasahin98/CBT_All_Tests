@@ -245,6 +245,7 @@ function renderPage(index) {
         const savedComments = responses[question.questionNumber]?.comments || "";
         const savedSliderValue = responses[question.questionNumber]?.slider || 0.5;
         const savedStdDev = responses[question.questionNumber]?.stddev || 0.1;
+        const savedTopBehavior = responses[question.questionNumber]?.top_behavior || "";
 
         const questionDiv = document.createElement('div');
         questionDiv.className = 'page active dynamic-question';
@@ -310,6 +311,25 @@ function renderPage(index) {
 
                     <!-- Behavior column -->
                     <div class="behavior-box">
+                    <div style="margin-bottom:15px;">
+                            <p><b>Please select the det. behavior:</b></p>
+
+                            <label style="margin-right:15px;">
+                                <input type="radio"
+                                    name="top_behavior_${question.questionNumber}"
+                                    value="Clay-like"
+                                    ${savedTopBehavior === "Clay-like" ? "checked" : ""}>
+                                Clay-like
+                            </label>
+
+                            <label>
+                                <input type="radio"
+                                    name="top_behavior_${question.questionNumber}"
+                                    value="Sand-like"
+                                    ${savedTopBehavior === "Sand-like" ? "checked" : ""}>
+                                Sand-like
+                            </label>
+                        </div>
                         <p>Please select the behavior type:</p>
 
                         <div style="display:flex; gap:10px; align-items:center;">
@@ -681,19 +701,23 @@ function saveAnswer(q) {
     const slider = document.getElementById(`slider_${q}`);
     const std = document.getElementById(`stddev_${q}`);
     const com = document.getElementById(`comments_${q}`);
+    const topBehavior = document.querySelector(`input[name="top_behavior_${q}"]:checked`);
 
     const isUnusable = unusableCheckbox && unusableCheckbox.checked;
 
     if (isUnusable) {
+        
         responses[q].behavior = "data not usable";
         responses[q].slider = "";
         responses[q].stddev = "";
+        
     } else {
         responses[q].behavior = slider ? slider.value : "";
         responses[q].slider = slider ? slider.value : "";
         responses[q].stddev = std ? std.value : "";
     }
     responses[q].comments = com ? com.value : "";
+    responses[q].top_behavior = topBehavior ? topBehavior.value : "";
 }
 
 function loadSavedAnswer(q) {
@@ -777,12 +801,13 @@ function downloadExcel() {
     excelData.push(["Researcher Name", document.getElementById("researcher-name").value]);
     excelData.push(["Email", currentUser.email]);
     excelData.push([]);
-    excelData.push(["Question #", "Behavior", "Slider", "Std Dev", "Comments"]);
+    excelData.push(["Question #", "Top Behavior", "Behavior", "Slider", "Std Dev", "Comments"]);
 
     // Loop through each question
     Object.keys(responses).forEach(q => {
         excelData.push([
             q,
+            responses[q].top_behavior || "",
             responses[q].behavior || "",
             responses[q].slider || "",
             responses[q].stddev || "",
