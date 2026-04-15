@@ -294,21 +294,30 @@ function renderPage(index) {
         const savedBehavior = responses[question.questionNumber]?.behavior || "";
         const savedComments = responses[question.questionNumber]?.comments || "";
         const preloadMu = preloadExcelMap[question.testNumber];
-        const savedSliderValue =
-            responses[question.questionNumber]?.slider ??
-            (preloadMu !== undefined && !isNaN(preloadMu) ? preloadMu : 0.5);
-        const meanForStd = parseFloat(savedSliderValue);
+        const existingResponse = responses[question.questionNumber];
+
+        const hasFirestoreResponse =
+            existingResponse &&
+            (
+                existingResponse.slider !== undefined ||
+                existingResponse.stddev !== undefined ||
+                existingResponse.top_behavior !== undefined ||
+                existingResponse.behavior !== undefined ||
+                existingResponse.comments !== undefined
+            );
+
+        const preloadSliderValue =
+            preloadMu !== undefined && !isNaN(preloadMu) ? preloadMu : 0.5;
+
+        const savedSliderValue = hasFirestoreResponse
+            ? parseFloat(existingResponse.slider)
+            : preloadSliderValue;
 
         const preloadStdDev =
-            !isNaN(meanForStd) ? getMaxStd(meanForStd) : 0.1;
+            !isNaN(preloadSliderValue) ? getMaxStd(preloadSliderValue) : 0.1;
 
-        const hasSavedStd =
-            responses[question.questionNumber]?.stddev !== undefined &&
-            responses[question.questionNumber]?.stddev !== null &&
-            responses[question.questionNumber]?.stddev !== "";
-
-        const savedStdDev = hasSavedStd
-            ? parseFloat(responses[question.questionNumber].stddev)
+        const savedStdDev = hasFirestoreResponse
+            ? parseFloat(existingResponse.stddev)
             : preloadStdDev;
         const preloadTopBehavior =
             preloadMu > 0.5 ? "Sand-like" :
