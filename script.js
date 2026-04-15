@@ -307,7 +307,9 @@ function renderPage(index) {
             );
 
         const preloadSliderValue =
-            preloadMu !== undefined && !isNaN(preloadMu) ? preloadMu : 0.5;
+            preloadMu !== undefined && !isNaN(preloadMu)
+                ? Number(preloadMu.toFixed(2))
+                : 0.5;
 
         const savedSliderValue = hasFirestoreResponse
             ? parseFloat(existingResponse.slider)
@@ -320,8 +322,8 @@ function renderPage(index) {
             ? parseFloat(existingResponse.stddev)
             : preloadStdDev;
         const preloadTopBehavior =
-            preloadMu > 0.5 ? "Sand-like" :
-            preloadMu < 0.5 ? "Clay-like" :
+            preloadSliderValue > 0.5 ? "Sand-like" :
+            preloadSliderValue < 0.5 ? "Clay-like" :
             "";
 
         const savedTopBehavior =
