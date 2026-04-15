@@ -298,7 +298,9 @@ function renderPage(index) {
             responses[question.questionNumber]?.slider ??
             (preloadMu !== undefined && !isNaN(preloadMu) ? preloadMu : 0.5);
         const preloadStdDev =
-            preloadMu !== undefined && !isNaN(preloadMu) ? getMaxStd(preloadMu) : 0.1;
+            savedSliderValue !== undefined && !isNaN(parseFloat(savedSliderValue))
+                ? getMaxStd(parseFloat(savedSliderValue))
+                : 0.1;
 
         const savedStdDev =
             responses[question.questionNumber]?.stddev ??
