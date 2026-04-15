@@ -61,6 +61,9 @@ async function loadPreloadExcel() {
         console.error("Failed to load preload Excel:", error);
         preloadExcelMap = {};
     }
+    console.log("selectedStrain:", selectedStrain);
+    console.log("researcher:", researcher);
+    console.log("filePath:", filePath);
 }
 
 function normalizeEmail(email) {
@@ -93,7 +96,6 @@ auth.onAuthStateChanged(async (user) => {
     // 1) Seed from preload (only if user's doc doesn't exist)
     await seedFromPreloadIfNeeded();
     await loadExistingResponses();
-    await loadPreloadExcel();
     
 
     // Only load questions once
@@ -256,8 +258,13 @@ async function loadQuestions() {
 
 // ------------------ PAGE NAVIGATION (UNCHANGED) ------------------
 
-function navigatePage(index) {
+async function navigatePage(index) {
     console.log(`Navigating to index: ${index}`);
+
+    if (index === 0) {
+        await loadPreloadExcel();
+    }
+
     if (index >= 0 && index < cachedQuestions.length) {
         renderPage(index);
     } else if (index === -1) {
