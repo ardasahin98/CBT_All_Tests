@@ -20,6 +20,48 @@ let currentUser = null;
 let cachedQuestions = [];
 let responses = {};
 const IMAGE_BASE = "https://Figures.s3.us-west-004.backblazeb2.com";
+let preloadExcelMap = {};
+
+
+async function loadPreloadExcel() {
+    const selectedStrain = document.getElementById("strain_type")?.value;
+    const researcher = document.getElementById("researcher-name")?.value;
+
+    if (!selectedStrain || !researcher) {
+        preloadExcelMap = {};
+        return;
+    }
+
+    const filePath = `Excel_Files_DA_9_Model/CDSS_New_Eliminated_with_mu_sigma_bands_${selectedStrain}_Model_DA_9.xlsx`;
+
+    try {
+        const response = await fetch(filePath);
+        const arrayBuffer = await response.arrayBuffer();
+
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet);
+
+        const muColumn = `mu_hat_${researcher}_LC`;
+
+        preloadExcelMap = {};
+
+        data.forEach(row => {
+            const testNum = Number(row["Test_Number"]);
+            const muValue = row[muColumn];
+
+            if (!isNaN(testNum) && muValue !== undefined && muValue !== null && muValue !== "") {
+                preloadExcelMap[testNum] = Number(muValue);
+            }
+        });
+
+        console.log("Preload Excel loaded:", filePath);
+    } catch (error) {
+        console.error("Failed to load preload Excel:", error);
+        preloadExcelMap = {};
+    }
+}
 
 function normalizeEmail(email) {
     return (email || "").toLowerCase().trim();
@@ -49,9 +91,10 @@ auth.onAuthStateChanged(async (user) => {
     document.getElementById("quiz-container").style.display = "block";
 
     // 1) Seed from preload (only if user's doc doesn't exist)
-    // 2) Then load the user's actual doc
     await seedFromPreloadIfNeeded();
     await loadExistingResponses();
+    await loadPreloadExcel();
+    
 
     // Only load questions once
     if (cachedQuestions.length === 0) {
@@ -243,7 +286,10 @@ function renderPage(index) {
 
         const savedBehavior = responses[question.questionNumber]?.behavior || "";
         const savedComments = responses[question.questionNumber]?.comments || "";
-        const savedSliderValue = responses[question.questionNumber]?.slider || 0.5;
+        const preloadMu = preloadExcelMap[question.testNumber];
+        const savedSliderValue =
+            responses[question.questionNumber]?.slider ??
+            (preloadMu !== undefined && !isNaN(preloadMu) ? preloadMu : 0.5);
         const savedStdDev = responses[question.questionNumber]?.stddev || 0.1;
         const savedTopBehavior = responses[question.questionNumber]?.top_behavior || "";
 
