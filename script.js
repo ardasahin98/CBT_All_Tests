@@ -32,7 +32,7 @@ async function loadPreloadExcel() {
         return;
     }
 
-    const filePath = `Excel_Files_DA_9_Model/CDSS_New_Eliminated_with_mu_sigma_bands_${selectedStrain}_Model_DA_9.xlsx`;
+    const filePath = `Excel_Files_DA_9_Model/CDSS_New_Eliminated_with_mu_sigma_bands_${selectedStrain}_Model_DA_9.csv`;
 
     try {
         const response = await fetch(filePath);
