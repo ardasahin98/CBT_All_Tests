@@ -297,8 +297,19 @@ function renderPage(index) {
         const savedSliderValue =
             responses[question.questionNumber]?.slider ??
             (preloadMu !== undefined && !isNaN(preloadMu) ? preloadMu : 0.5);
-        const savedStdDev = responses[question.questionNumber]?.stddev || 0.1;
-        const savedTopBehavior = responses[question.questionNumber]?.top_behavior || "";
+        const preloadStdDev =
+            preloadMu !== undefined && !isNaN(preloadMu) ? getMaxStd(preloadMu) : 0.1;
+
+        const savedStdDev =
+            responses[question.questionNumber]?.stddev ??
+            preloadStdDev;
+        const preloadTopBehavior =
+            preloadMu > 0.5 ? "Sand-like" :
+            preloadMu < 0.5 ? "Clay-like" :
+            "";
+
+        const savedTopBehavior =
+            responses[question.questionNumber]?.top_behavior || preloadTopBehavior;
 
         const questionDiv = document.createElement('div');
         questionDiv.className = 'page active dynamic-question';
@@ -418,7 +429,7 @@ function renderPage(index) {
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <label><b>Standard Deviation:</b></label>
 
-                                <input 
+                                <input  
                                     type="number" 
                                     id="stddev_${question.questionNumber}"
                                     value="${savedStdDev}" 
@@ -467,6 +478,7 @@ function renderPage(index) {
         const slider = document.getElementById(`slider_${question.questionNumber}`);
         const sliderInput = document.getElementById(`slider_input_${question.questionNumber}`);
         const stddevInput = document.getElementById(`stddev_${question.questionNumber}`);
+        const topBehaviorRadios = document.querySelectorAll(`input[name="top_behavior_${question.questionNumber}"]`);
         const radioButton = document.querySelector(`input[name="behavior_${question.questionNumber}"][value="data not usable"]`);
 
         const maxStdSpan = document.getElementById(`max_stddev_${question.questionNumber}`);
@@ -486,7 +498,19 @@ function renderPage(index) {
         piSelect.addEventListener("change", () => {
             updateStrainImage(question.questionNumber, question.testNumber);
         });
+        function syncTopBehaviorFromMean() {
+            const mean = parseFloat(slider.value);
 
+            topBehaviorRadios.forEach(r => r.checked = false);
+
+            if (mean > 0.5) {
+                const sandRadio = document.querySelector(`input[name="top_behavior_${question.questionNumber}"][value="Sand-like"]`);
+                if (sandRadio) sandRadio.checked = true;
+            } else if (mean < 0.5) {
+                const clayRadio = document.querySelector(`input[name="top_behavior_${question.questionNumber}"][value="Clay-like"]`);
+                if (clayRadio) clayRadio.checked = true;
+            }
+        }
         // ----- IMAGE UPDATE FUNCTION -----
         function updateStrainImage(qNum, testNum) {
             const strainFolder = document.getElementById(`strain_select_${qNum}`).value;
@@ -516,6 +540,7 @@ function renderPage(index) {
 
         function updateMaxStddevDisplay() {
             const mean = parseFloat(slider.value);
+
             if (!isNaN(mean) && mean > 0 && mean < 1) {
                 const maxStdev = getMaxStd(mean);
                 maxStdSpan.textContent = `(max: ${maxStdev.toFixed(3)})`;
@@ -523,7 +548,7 @@ function renderPage(index) {
 
                 const currentStd = parseFloat(stddevInput.value);
                 if (!isNaN(currentStd) && currentStd > maxStdev) {
-                    stddevInput.value = maxStdev.toFixed(3);  // auto-correct stddev
+                    stddevInput.value = maxStdev.toFixed(3);
                 }
             } else {
                 maxStdSpan.textContent = "";
@@ -532,8 +557,17 @@ function renderPage(index) {
         }
  
 
-        slider.addEventListener('input', () => (sliderInput.value = slider.value));
-        sliderInput.addEventListener('input', () => (slider.value = sliderInput.value));
+        slider.addEventListener('input', () => {
+            sliderInput.value = slider.value;
+            updateMaxStddevDisplay();
+            syncTopBehaviorFromMean();
+        });
+
+        sliderInput.addEventListener('input', () => {
+            slider.value = sliderInput.value;
+            updateMaxStddevDisplay();
+            syncTopBehaviorFromMean();
+        });
         slider.addEventListener('input', updateMaxStddevDisplay);
         sliderInput.addEventListener('input', updateMaxStddevDisplay);
         updateMaxStddevDisplay();  // call once on load
@@ -772,6 +806,21 @@ function saveAnswer(q) {
     responses[q].comments = com ? com.value : "";
     responses[q].top_behavior = topBehavior ? topBehavior.value : "";
 }
+function validateQuestion(q) {
+    const slider = document.getElementById(`slider_${q}`);
+    const unusableCheckbox = document.querySelector(`input[name="behavior_${q}"]`);
+    const topBehavior = document.querySelector(`input[name="top_behavior_${q}"]:checked`);
+
+    const isUnusable = unusableCheckbox && unusableCheckbox.checked;
+    const mean = slider ? parseFloat(slider.value) : NaN;
+
+    if (!isUnusable && mean === 0.5 && !topBehavior) {
+        alert("Please select Clay-like or Sand-like when the current value is 0.5.");
+        return false;
+    }
+
+    return true;
+}
 
 function loadSavedAnswer(q) {
     if (!responses[q]) return;
@@ -832,6 +881,7 @@ async function submitForm() {
 async function goToPage(currentQuestionNumber, nextPageIndex) {
     // Save locally
     if (currentQuestionNumber >= 1 && currentQuestionNumber <= cachedQuestions.length) {
+        if (!validateQuestion(currentQuestionNumber)) return;
         saveAnswer(currentQuestionNumber);
     }
 
