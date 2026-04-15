@@ -316,7 +316,9 @@ function renderPage(index) {
             : preloadSliderValue;
 
         const preloadStdDev =
-            !isNaN(preloadSliderValue) ? getMaxStd(preloadSliderValue) : 0.1;
+            !isNaN(preloadSliderValue)
+                ? Number(getMaxStd(preloadSliderValue).toFixed(2))
+                : 0.1;
 
         const savedStdDev = hasFirestoreResponse
             ? parseFloat(existingResponse.stddev)
