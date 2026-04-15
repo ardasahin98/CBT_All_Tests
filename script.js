@@ -297,14 +297,19 @@ function renderPage(index) {
         const savedSliderValue =
             responses[question.questionNumber]?.slider ??
             (preloadMu !== undefined && !isNaN(preloadMu) ? preloadMu : 0.5);
-        const preloadStdDev =
-            savedSliderValue !== undefined && !isNaN(parseFloat(savedSliderValue))
-                ? getMaxStd(parseFloat(savedSliderValue))
-                : 0.1;
+        const meanForStd = parseFloat(savedSliderValue);
 
-        const savedStdDev =
-            responses[question.questionNumber]?.stddev ??
-            preloadStdDev;
+        const preloadStdDev =
+            !isNaN(meanForStd) ? getMaxStd(meanForStd) : 0.1;
+
+        const hasSavedStd =
+            responses[question.questionNumber]?.stddev !== undefined &&
+            responses[question.questionNumber]?.stddev !== null &&
+            responses[question.questionNumber]?.stddev !== "";
+
+        const savedStdDev = hasSavedStd
+            ? parseFloat(responses[question.questionNumber].stddev)
+            : preloadStdDev;
         const preloadTopBehavior =
             preloadMu > 0.5 ? "Sand-like" :
             preloadMu < 0.5 ? "Clay-like" :
