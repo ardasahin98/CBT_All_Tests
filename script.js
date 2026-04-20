@@ -508,7 +508,6 @@ function renderPage(index) {
 
         // Default selection = 9% DA strain
         strainSelect.value = "9_DA";
-        piSelect.value = "No";
 
         updateStrainImage(question.questionNumber, question.testNumber);
 
