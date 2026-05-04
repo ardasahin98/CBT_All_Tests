@@ -21,6 +21,7 @@ let cachedQuestions = [];
 let responses = {};
 const IMAGE_BASE = "https://Figures.s3.us-west-004.backblazeb2.com";
 let preloadExcelMap = {};
+let preloadSigmaMap = {};
 
 
 async function loadPreloadExcel() {
@@ -29,6 +30,7 @@ async function loadPreloadExcel() {
 
     if (!selectedStrain || !researcher) {
         preloadExcelMap = {};
+        preloadSigmaMap = {};
         return;
     }
 
@@ -44,15 +46,22 @@ async function loadPreloadExcel() {
         const data = XLSX.utils.sheet_to_json(worksheet);
 
         const muColumn = `mu_hat_${researcher}_LC`;
+        const sigmaColumn = `sigma_hat_${researcher}_LC`;
 
         preloadExcelMap = {};
+        preloadSigmaMap = {};
 
         data.forEach(row => {
             const testNum = Number(row["Test_Number"]);
             const muValue = row[muColumn];
+            const sigmaValue = row[sigmaColumn];
 
             if (!isNaN(testNum) && muValue !== undefined && muValue !== null && muValue !== "") {
                 preloadExcelMap[testNum] = Number(muValue);
+            }
+
+            if (!isNaN(testNum) && sigmaValue !== undefined && sigmaValue !== null && sigmaValue !== "") {
+                preloadSigmaMap[testNum] = Number(sigmaValue);
             }
         });
 
@@ -60,6 +69,8 @@ async function loadPreloadExcel() {
     } catch (error) {
         console.error("Failed to load preload Excel:", error);
         preloadExcelMap = {};
+
+        preloadSigmaMap = {};
     }
     console.log("selectedStrain:", selectedStrain);
     console.log("researcher:", researcher);
@@ -262,6 +273,13 @@ async function navigatePage(index) {
     console.log(`Navigating to index: ${index}`);
 
     if (index === 0) {
+        const researcher = document.getElementById("researcher-name")?.value;
+
+        if (!researcher) {
+            alert("Please select a researcher before continuing.");
+            return;
+        }
+
         await loadPreloadExcel();
     }
 
@@ -294,6 +312,7 @@ function renderPage(index) {
         const savedBehavior = responses[question.questionNumber]?.behavior || "";
         const savedComments = responses[question.questionNumber]?.comments || "";
         const preloadMu = preloadExcelMap[question.testNumber];
+        const preloadSigma = preloadSigmaMap[question.testNumber];
         const existingResponse = responses[question.questionNumber];
 
         const hasFirestoreResponse =
@@ -316,8 +335,8 @@ function renderPage(index) {
             : preloadSliderValue;
 
         const preloadStdDev =
-            !isNaN(preloadSliderValue)
-                ? Number(getMaxStd(preloadSliderValue).toFixed(2))
+            preloadSigma !== undefined && !isNaN(preloadSigma)
+                ? Number(preloadSigma.toFixed(2))
                 : 0.1;
 
         const savedStdDev = hasFirestoreResponse
@@ -628,8 +647,8 @@ function renderPage(index) {
 }
 
 
-const imgEl = document.getElementById(`strain_image_${question.questionNumber}`);
-const wrapper = document.getElementById(`img_wrapper_${question.questionNumber}`);
+// const imgEl = document.getElementById(`strain_image_${question.questionNumber}`);
+// const wrapper = document.getElementById(`img_wrapper_${question.questionNumber}`);
 
 imgEl.onload = function () {
 
@@ -706,6 +725,15 @@ async function saveProgressToFirestore() {
     }
 }
 
+function logit(p) {
+    const clipped = Math.min(Math.max(p, 1e-12), 1 - 1e-12);
+    return Math.log(clipped / (1 - clipped));
+}
+
+function sigmoid(z) {
+    return 1 / (1 + Math.exp(-z));
+}
+
 function plotBeta(questionNumber) {
     const meanInput = document.getElementById(`slider_${questionNumber}`);
     const stddevInput = document.getElementById(`stddev_${questionNumber}`);
@@ -713,76 +741,72 @@ function plotBeta(questionNumber) {
 
     if (!meanInput || !stddevInput || !plotDiv) return;
 
-    const mean = parseFloat(meanInput.value);
-    const userStd = parseFloat(stddevInput.value);
-    const maxStd = getMaxStd(mean);
-    const stddev = Math.min(userStd, maxStd);
+    const meanOriginal = parseFloat(meanInput.value);
+    const sigmaZ = parseFloat(stddevInput.value);
 
-    if (isNaN(mean) || isNaN(stddev) || stddev <= 0 || mean <= 0 || mean >= 1) {
-        // alert("Please provide a valid mean (0–1) and a positive standard deviation.");
+    if (
+        isNaN(meanOriginal) ||
+        isNaN(sigmaZ) ||
+        meanOriginal <= 0 ||
+        meanOriginal >= 1 ||
+        sigmaZ <= 0
+    ) {
         return;
     }
-    
-    const variance = stddev ** 2;
 
-    // Compute alpha and beta parameters
-    const common = (mean * (1 - mean) / variance - 1);
-    const alpha = mean * common;
-    const beta = (1 - mean) * common;
-
-    if (alpha <= 1 || beta <= 1) {
-        Plotly.newPlot(plotDiv, [{
-            x: [0.5],
-            y: [0.5],
-            mode: 'text',
-            text: [`Invalid parameters:<br>α = ${alpha.toFixed(2)}, β = ${beta.toFixed(2)}<br>Please adjust mean or std.`],
-            textposition: 'middle center',
-            type: 'scatter'
-        }], {
-            xaxis: { visible: false },
-            yaxis: { visible: false },
-            margin: { t: 10, r: 30 },
-            showlegend: false
-        });
-        return;
-    }
+    const muZ = logit(meanOriginal);
 
     const x = [];
     const y = [];
+    const tickVals = [];
+    const tickText = [];
+
+    const zMin = muZ - 4 * sigmaZ;
+    const zMax = muZ + 4 * sigmaZ;
 
     for (let i = 0; i <= 1000; i++) {
-        const xi = i / 1000;
-        const yi = jStat.beta.pdf(xi, alpha, beta);
-        x.push(xi);  // convert to percentage for plotting on 0–100 scale
-        y.push(yi);
+        const z = zMin + (zMax - zMin) * i / 1000;
+        const density =
+            (1 / (sigmaZ * Math.sqrt(2 * Math.PI))) *
+            Math.exp(-0.5 * ((z - muZ) / sigmaZ) ** 2);
+
+        x.push(z);
+        y.push(density);
+    }
+
+    for (let k = -2; k <= 2; k++) {
+        const zTick = muZ + k * sigmaZ;
+        const originalTick = sigmoid(zTick);
+
+        tickVals.push(zTick);
+        tickText.push(`${zTick.toFixed(2)}<br>(${originalTick.toFixed(2)})`);
     }
 
     Plotly.newPlot(plotDiv, [
         {
             x: x,
             y: y,
-            mode: 'lines',
-            line: { color: 'black', width: 3 },
-            name: `Beta PDF`,
-        },
+            mode: "lines",
+            line: { color: "black", width: 3 },
+            name: "Normal PDF"
+        }
     ], {
         margin: { t: 5, r: 10 },
         xaxis: {
-            title: 'Cyclic Behavior Type, CBT',
-            range: [-0.05, 1.05],
-            tickmode: 'linear',
-            tick0: 0,
-            dtick: 0.1  // or 5 for finer ticks
+            title: "Transformed CBT, logit(CBT)<br>(CBT)",
+            tickvals: tickVals,
+            ticktext: tickText
         },
         yaxis: {
-                title: 'Density',
-                range: [0, Math.max(...y) * 1.1]
-            },
+            title: "Density",
+            range: [0, Math.max(...y) * 1.1]
+        },
         legend: {
             title: {
-                    text: `Mean: ${mean.toFixed(2)} | Std: ${stddev.toFixed(2)}<br>Alpha: ${alpha.toFixed(2)} | Beta: ${beta.toFixed(2)}` },
-            x: -0.3,
-            y: -0.5
+                text: `Mean: ${muZ.toFixed(2)} (${meanOriginal.toFixed(2)})<br>Sigma: ${sigmaZ.toFixed(2)}`
+            },
+            x: -0.25,
+            y: -0.45
         },
         showlegend: true
     });
