@@ -468,21 +468,16 @@ function renderPage(index) {
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <label><b>Standard Deviation:</b></label>
 
-                                <input  
-                                    type="number" 
-                                    id="stddev_${question.questionNumber}"
-                                    value="${savedStdDev}" 
-                                    min="0.01" 
-                                    step="0.01"
-                                    style="width:100px;"
-                                    ${savedBehavior === "data not usable" ? "disabled" : ""}
-                                >
+                                    <input  
+                                        type="number" 
+                                        id="stddev_${question.questionNumber}"
+                                        value="${savedStdDev}" 
+                                        min="0.01" 
+                                        step="0.01"
+                                        style="width:100px;"
+                                        ${savedBehavior === "data not usable" ? "disabled" : ""}
+                                    />
                             </div>
-
-                            <span 
-                                id="max_stddev_${question.questionNumber}" 
-                                style="font-size:14px; color:#888; margin-top:5px;"
-                            ></span>
 
                         </div>
                     </div>
@@ -520,7 +515,6 @@ function renderPage(index) {
         const topBehaviorRadios = document.querySelectorAll(`input[name="top_behavior_${question.questionNumber}"]`);
         const radioButton = document.querySelector(`input[name="behavior_${question.questionNumber}"][value="data not usable"]`);
 
-        const maxStdSpan = document.getElementById(`max_stddev_${question.questionNumber}`);
 
         const strainSelect = document.getElementById(`strain_select_${question.questionNumber}`);
         const piSelect = document.getElementById("pi_selection");
@@ -576,40 +570,18 @@ function renderPage(index) {
 
             imgEl.src = imgPath;
         }
-
-        function updateMaxStddevDisplay() {
-            const mean = parseFloat(slider.value);
-
-            if (!isNaN(mean) && mean > 0 && mean < 1) {
-                const maxStdev = getMaxStd(mean);
-                maxStdSpan.textContent = `(max: ${maxStdev.toFixed(3)})`;
-                stddevInput.max = maxStdev.toFixed(3);
-
-                const currentStd = parseFloat(stddevInput.value);
-                if (!isNaN(currentStd) && currentStd > maxStdev) {
-                    stddevInput.value = maxStdev.toFixed(3);
-                }
-            } else {
-                maxStdSpan.textContent = "";
-                stddevInput.removeAttribute("max");
-            }
-        }
  
 
         slider.addEventListener('input', () => {
             sliderInput.value = slider.value;
-            updateMaxStddevDisplay();
             syncTopBehaviorFromMean();
         });
 
         sliderInput.addEventListener('input', () => {
             slider.value = sliderInput.value;
-            updateMaxStddevDisplay();
             syncTopBehaviorFromMean();
         });
-        slider.addEventListener('input', updateMaxStddevDisplay);
-        sliderInput.addEventListener('input', updateMaxStddevDisplay);
-        updateMaxStddevDisplay();  // call once on load
+
         
         radioButton.addEventListener('change', (event) => {
             const isDisabled = event.target.checked;
@@ -631,14 +603,7 @@ function renderPage(index) {
     stddevInput.addEventListener('input', () => {
         plotBeta(question.questionNumber);
     });
-    stddevInput.addEventListener('input', () => {
-        const mean = parseFloat(slider.value);
-        const maxStd = getMaxStd(mean);
-        const enteredStd = parseFloat(stddevInput.value);
-        if (!isNaN(enteredStd) && enteredStd > maxStd) {
-            stddevInput.value = maxStd.toFixed(3);
-        }
-    });
+
     plotBeta(question.questionNumber);
     } else {
         console.error(`Invalid page index: ${index}`);
@@ -650,18 +615,6 @@ function renderPage(index) {
 // const imgEl = document.getElementById(`strain_image_${question.questionNumber}`);
 // const wrapper = document.getElementById(`img_wrapper_${question.questionNumber}`);
 
-imgEl.onload = function () {
-
-    // natural dimensions of the loaded image
-    const natWidth = imgEl.naturalWidth;
-    const natHeight = imgEl.naturalHeight;
-
-    // limit wrapper height so it can never exceed image height
-    wrapper.style.maxHeight = natHeight + "px";
-
-    // initial image display
-    imgEl.style.display = "block";
-};
 
 document.addEventListener("mousedown", function (e) {
     const wrapper = e.target.closest(".image-wrapper");
@@ -686,17 +639,6 @@ document.addEventListener("mousedown", function (e) {
     document.addEventListener("mouseup", stop);
 });
 
-function getMaxStd(mean) {
-    let bestStd = 0;
-    for (let alpha = 1.01; alpha <= 100; alpha += 0.05) {
-        const beta = alpha * (1 - mean) / mean;
-        if (beta <= 1) continue;
-        const variance = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1));
-        const std = Math.sqrt(variance);
-        if (std > bestStd) bestStd = std;
-    }
-    return bestStd;
-}
 
 async function saveProgressToFirestore() {
     if (!currentUser) return;
