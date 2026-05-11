@@ -734,28 +734,21 @@ function plotBeta(questionNumber) {
     const zMax = muZ + 4 * sigmaZ;
 
     for (let i = 0; i <= 1000; i++) {
-        const pi = 0.001 + (0.998 * i / 1000);
-        const zi = logit(pi);
-
-        const normalDensity =
-            (1 / (sigmaZ * Math.sqrt(2 * Math.PI))) *
-            Math.exp(-0.5 * ((zi - muZ) / sigmaZ) ** 2);
-
-        const originalDensity = normalDensity / (pi * (1 - pi));
-
-        muOriginalX.push(pi);
-        originalPDF.push(originalDensity);
-    }
-
-    for (let i = 0; i <= 1000; i++) {
         const zi = zMin + (zMax - zMin) * i / 1000;
+        const pi = sigmoid(zi);
 
         const normalDensity =
             (1 / (sigmaZ * Math.sqrt(2 * Math.PI))) *
             Math.exp(-0.5 * ((zi - muZ) / sigmaZ) ** 2);
+
+        const piClipped = Math.min(Math.max(pi, 1e-6), 1 - 1e-6);
+        const originalDensity = normalDensity / (piClipped * (1 - piClipped));
 
         z.push(zi);
         normalPDF.push(normalDensity);
+
+        muOriginalX.push(pi);
+        originalPDF.push(originalDensity);
     }
 
     const tickVals = [];
@@ -774,7 +767,7 @@ function plotBeta(questionNumber) {
             x: muOriginalX,
             y: originalPDF,
             mode: "lines",
-            line: { color: "black", width: 3 },
+            line: { color: "steelblue", width: 3 },
             name: "Original Space PDF",
             xaxis: "x",
             yaxis: "y"
@@ -814,7 +807,6 @@ function plotBeta(questionNumber) {
             title: "Density"
         },
 
-        
         legend: {
             title: {
                 text:
