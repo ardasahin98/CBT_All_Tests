@@ -776,7 +776,7 @@ function plotBeta(questionNumber) {
             x: muOriginalX,
             y: originalPDF,
             mode: "lines",
-            line: { color: "steelblue", width: 3 },
+            line: { color: "black", width: 3 },
             name: "Original Space PDF",
             xaxis: "x",
             yaxis: "y"
