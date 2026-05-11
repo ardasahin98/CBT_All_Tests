@@ -23,7 +23,7 @@ body {
     max-width: 1400px;
     background: #ffffff;
     border-radius: 16px;
-    padding: 35px 40px;
+    padding: 60px 40px;   /* increased vertical height */
     margin: 40px auto;
     box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
@@ -31,7 +31,7 @@ body {
 /* ---- Header ---- */
 .question-header {
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 42px;
 }
 .question-header h2 {
     font-size: 26px;
@@ -50,7 +50,7 @@ textarea {
 
 /* ---- NAVIGATION BUTTONS ---- */
 .navigation-buttons {
-    margin-top: 25px;
+    margin-top: 40px;
     text-align: center;
 }
 
