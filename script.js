@@ -733,22 +733,31 @@ function plotBeta(questionNumber) {
     const zMin = muZ - 4 * sigmaZ;
     const zMax = muZ + 4 * sigmaZ;
 
+    // Original CBT-space curve: force x-axis data from 0 to 1
     for (let i = 0; i <= 1000; i++) {
-        const zi = zMin + (zMax - zMin) * i / 1000;
-        const pi = sigmoid(zi);
+        const pi = 0.001 + (0.998 * i / 1000);
+        const zi = logit(pi);
 
         const normalDensity =
             (1 / (sigmaZ * Math.sqrt(2 * Math.PI))) *
             Math.exp(-0.5 * ((zi - muZ) / sigmaZ) ** 2);
 
-        const piClipped = Math.min(Math.max(pi, 1e-6), 1 - 1e-6);
-        const originalDensity = normalDensity / (piClipped * (1 - piClipped));
-
-        z.push(zi);
-        normalPDF.push(normalDensity);
+        const originalDensity = normalDensity / (pi * (1 - pi));
 
         muOriginalX.push(pi);
         originalPDF.push(originalDensity);
+    }
+
+    // Transformed logit-space curve
+    for (let i = 0; i <= 1000; i++) {
+        const zi = zMin + (zMax - zMin) * i / 1000;
+
+        const normalDensity =
+            (1 / (sigmaZ * Math.sqrt(2 * Math.PI))) *
+            Math.exp(-0.5 * ((zi - muZ) / sigmaZ) ** 2);
+
+        z.push(zi);
+        normalPDF.push(normalDensity);
     }
 
     const tickVals = [];
