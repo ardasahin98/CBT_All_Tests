@@ -22,6 +22,28 @@ let responses = {};
 const IMAGE_BASE = "https://Figures.s3.us-west-004.backblazeb2.com";
 let preloadExcelMap = {};
 let preloadSigmaMap = {};
+const STD_RATIO_BY_RESEARCHER = {
+    AJ:  [0.386128, 0.232307, 0.286643, 0.413166],
+    AS:  [0.366791, 0.250667, 0.218948, 0.397956],
+    AWS: [0.498178, 0.533583, 0.476322, 0.582728],
+    JPS: [0.550177, 0.462844, 0.430713, 0.476860],
+    KJU: [0.592111, 0.428295, 0.459287, 0.616389],
+    SJB: [0.513639, 0.505644, 0.496326, 0.513240],
+    SLK: [0.466566, 0.463459, 0.360218, 0.425924],
+    VR:  [0.468630, 0.342139, 0.240086, 0.417804],
+    KOC: [0.412762, 0.396967, 0.350511, 0.504387]
+};
+
+function getStdRatio(researcher, mu) {
+    const ratios = STD_RATIO_BY_RESEARCHER[researcher];
+
+    if (!ratios || isNaN(mu)) return 1;
+
+    if (mu <= 0.25) return ratios[0];
+    if (mu <= 0.50) return ratios[1];
+    if (mu <= 0.75) return ratios[2];
+    return ratios[3];
+}
 
 
 async function loadPreloadExcel() {
@@ -334,9 +356,11 @@ function renderPage(index) {
             ? parseFloat(existingResponse.slider)
             : preloadSliderValue;
 
+        const researcher = document.getElementById("researcher-name")?.value;
+
         const preloadStdDev =
             preloadSigma !== undefined && !isNaN(preloadSigma)
-                ? Number(preloadSigma.toFixed(2))
+                ? Number((preloadSigma * getStdRatio(researcher, preloadSliderValue)).toFixed(2))
                 : 0.1;
 
         const savedStdDev = hasFirestoreResponse
@@ -698,23 +722,34 @@ function plotBeta(questionNumber) {
 
     const muZ = logit(meanOriginal);
 
-    const x = [];
-    const y = [];
-    const tickVals = [];
-    const tickText = [];
+    const z = [];
+    const normalPDF = [];
+    const muOriginalX = [];
+    const originalPDF = [];
 
     const zMin = muZ - 4 * sigmaZ;
     const zMax = muZ + 4 * sigmaZ;
 
     for (let i = 0; i <= 1000; i++) {
-        const z = zMin + (zMax - zMin) * i / 1000;
-        const density =
-            (1 / (sigmaZ * Math.sqrt(2 * Math.PI))) *
-            Math.exp(-0.5 * ((z - muZ) / sigmaZ) ** 2);
+        const zi = zMin + (zMax - zMin) * i / 1000;
+        const pi = sigmoid(zi);
 
-        x.push(z);
-        y.push(density);
+        const normalDensity =
+            (1 / (sigmaZ * Math.sqrt(2 * Math.PI))) *
+            Math.exp(-0.5 * ((zi - muZ) / sigmaZ) ** 2);
+
+        const piClipped = Math.min(Math.max(pi, 1e-6), 1 - 1e-6);
+        const originalDensity = normalDensity / (piClipped * (1 - piClipped));
+
+        z.push(zi);
+        normalPDF.push(normalDensity);
+
+        muOriginalX.push(pi);
+        originalPDF.push(originalDensity);
     }
+
+    const tickVals = [];
+    const tickText = [];
 
     for (let k = -2; k <= 2; k++) {
         const zTick = muZ + k * sigmaZ;
@@ -726,31 +761,61 @@ function plotBeta(questionNumber) {
 
     Plotly.newPlot(plotDiv, [
         {
-            x: x,
-            y: y,
+            x: muOriginalX,
+            y: originalPDF,
+            mode: "lines",
+            line: { color: "steelblue", width: 3 },
+            name: "Original Space PDF",
+            xaxis: "x",
+            yaxis: "y"
+        },
+        {
+            x: z,
+            y: normalPDF,
             mode: "lines",
             line: { color: "black", width: 3 },
-            name: "Normal PDF"
+            name: "Transformed Normal PDF",
+            xaxis: "x2",
+            yaxis: "y2"
         }
     ], {
-        margin: { t: 5, r: 10 },
+        margin: { t: 35, r: 15, b: 60, l: 55 },
+
         xaxis: {
+            domain: [0, 1],
+            anchor: "y",
+            title: "CBT",
+            range: [0, 1]
+        },
+        yaxis: {
+            domain: [0.57, 1],
+            title: "Density"
+        },
+
+        xaxis2: {
+            domain: [0, 1],
+            anchor: "y2",
             title: "Transformed CBT, logit(CBT)<br>(CBT)",
             tickvals: tickVals,
             ticktext: tickText
         },
-        yaxis: {
-            title: "Density",
-            range: [0, Math.max(...y) * 1.1]
+        yaxis2: {
+            domain: [0, 0.43],
+            title: "Density"
         },
+
         legend: {
             title: {
                 text: `Mean: ${muZ.toFixed(2)} (${meanOriginal.toFixed(2)})<br>Sigma: ${sigmaZ.toFixed(2)}`
             },
-            x: -0.25,
-            y: -0.45
+            x: 0,
+            y: -0.25,
+            orientation: "h"
         },
+
         showlegend: true
+    }, {
+        responsive: true
     });
 }
 // ------------------ SAVE & RESTORE ANSWERS ------------------
