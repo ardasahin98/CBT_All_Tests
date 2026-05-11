@@ -125,8 +125,10 @@ textarea {
 }
 
 /* ---- Behavior Box ---- */
+/* ---- Behavior Box ---- */
 .behavior-box {
     width: 30%;
+    min-height: 520px;   /* ADD THIS */
     background: #ffffff;
     padding: 25px;
     border-radius: 16px;
@@ -136,7 +138,7 @@ textarea {
 /* ---- Plot Box ---- */
 .plot-box {
     width: 40%;
-    min-height: 320px;
+    min-height: 520px;   /* CHANGE FROM 320px */
     background: #ffffff;
     padding: 20px;
     border-radius: 16px;
@@ -146,6 +148,7 @@ textarea {
 /* ---- Comments Box ---- */
 .comments-box {
     width: 30%;
+    min-height: 520px;   /* ADD THIS */
     background: #ffffff;
     padding: 25px;
     border-radius: 16px;
