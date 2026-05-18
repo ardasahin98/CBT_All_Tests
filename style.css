@@ -173,3 +173,26 @@ textarea {
     padding: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+
+.question-jump-input {
+    width: 70px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.progress-incomplete {
+    margin-top: 8px;
+    font-size: 15px;
+    color: #666;
+}
+
+.progress-complete {
+    margin-top: 8px;
+    font-size: 16px;
+    color: green;
+    font-weight: bold;
+}

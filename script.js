@@ -316,6 +316,72 @@ async function navigatePage(index) {
     }
 }
 
+function getAnsweredQuestionNumbers() {
+    return Object.keys(responses)
+        .map(Number)
+        .filter(q => {
+            const r = responses[q];
+            if (!r) return false;
+
+            return (
+                r.behavior !== undefined ||
+                r.slider !== undefined ||
+                r.stddev !== undefined ||
+                r.top_behavior !== undefined ||
+                r.comments !== undefined
+            );
+        })
+        .sort((a, b) => a - b);
+}
+
+function groupConsecutiveNumbers(numbers) {
+    if (numbers.length === 0) return [];
+
+    const groups = [];
+    let start = numbers[0];
+    let end = numbers[0];
+
+    for (let i = 1; i < numbers.length; i++) {
+        if (numbers[i] === end + 1) {
+            end = numbers[i];
+        } else {
+            groups.push(start === end ? `q${start}` : `q${start} - ${end}`);
+            start = numbers[i];
+            end = numbers[i];
+        }
+    }
+
+    groups.push(start === end ? `q${start}` : `q${start} - ${end}`);
+    return groups;
+}
+
+function getProgressText() {
+    const answered = getAnsweredQuestionNumbers();
+
+    if (answered.length === cachedQuestions.length) {
+        return {
+            text: "You answered all questions.",
+            complete: true
+        };
+    }
+
+    if (answered.length === 0) {
+        return {
+            text: "You have not answered any questions yet.",
+            complete: false
+        };
+    }
+
+    const groups = groupConsecutiveNumbers(answered);
+    const maxAnsweredBeforeGap = answered.find((q, i) => answered[i + 1] !== q + 1);
+    const leftAround = maxAnsweredBeforeGap ? maxAnsweredBeforeGap + 1 : answered[answered.length - 1] + 1;
+
+    return {
+        text: `You answered ${groups.join(" and ")}. You probably left the quiz around q${leftAround}.`,
+        complete: false
+    };
+}
+
 // ------------------ PAGE RENDERING (UNCHANGED EXCEPT LOADING) ------------------
 
 function renderPage(index) {
@@ -381,7 +447,23 @@ function renderPage(index) {
             <div class="question-wrapper">
 
                 <div class="question-header">
-                    <h2>Question ${question.questionNumber}/${cachedQuestions.length}</h2>
+                    <h2>
+                        Question 
+                        <input 
+                            type="number"
+                            id="question_jump_input_${question.questionNumber}"
+                            value="${question.questionNumber}"
+                            min="1"
+                            max="${cachedQuestions.length}"
+                            class="question-jump-input"
+                        >
+                        /${cachedQuestions.length}
+                    </h2>
+
+                    <p id="progress_summary_${question.questionNumber}" 
+                    class="${getProgressText().complete ? "progress-complete" : "progress-incomplete"}">
+                    ${getProgressText().text}
+                    </p>
                 </div>
 
                 <div class="navigation-buttons">
@@ -538,6 +620,26 @@ function renderPage(index) {
         const stddevInput = document.getElementById(`stddev_${question.questionNumber}`);
         const topBehaviorRadios = document.querySelectorAll(`input[name="top_behavior_${question.questionNumber}"]`);
         const radioButton = document.querySelector(`input[name="behavior_${question.questionNumber}"][value="data not usable"]`);
+
+        const questionJumpInput = document.getElementById(`question_jump_input_${question.questionNumber}`);
+
+        questionJumpInput.addEventListener("keydown", async (event) => {
+            if (event.key === "Enter") {
+                const targetQuestionNumber = parseInt(questionJumpInput.value);
+
+                if (
+                    isNaN(targetQuestionNumber) ||
+                    targetQuestionNumber < 1 ||
+                    targetQuestionNumber > cachedQuestions.length
+                ) {
+                    alert(`Please enter a question number between 1 and ${cachedQuestions.length}.`);
+                    questionJumpInput.value = question.questionNumber;
+                    return;
+                }
+
+                await goToPage(question.questionNumber, targetQuestionNumber - 1);
+            }
+        });
 
 
         const strainSelect = document.getElementById(`strain_select_${question.questionNumber}`);
@@ -870,6 +972,14 @@ function saveAnswer(q) {
     }
     responses[q].comments = com ? com.value : "";
     responses[q].top_behavior = topBehavior ? topBehavior.value : "";
+
+    const progressEl = document.getElementById(`progress_summary_${q}`);
+
+    if (progressEl) {
+        const progress = getProgressText();
+        progressEl.textContent = progress.text;
+        progressEl.className = progress.complete ? "progress-complete" : "progress-incomplete";
+    }
 }
 function validateQuestion(q) {
     const slider = document.getElementById(`slider_${q}`);
